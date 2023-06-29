@@ -21,7 +21,7 @@ public class Prices {
 
     public static Connection createApp() throws SQLException {
 
-        final Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/lift_pass", "root", "mysql");
+        final Connection connection = DriverManager.getConnection("jdbc:hsqldb:mem", "SA", null);
 
         port(4567);
 
@@ -30,11 +30,10 @@ public class Prices {
             String liftPassType = req.queryParams("type");
 
             try (PreparedStatement stmt = connection.prepareStatement( //
-                    "INSERT INTO base_price (type, cost) VALUES (?, ?) " + //
-                            "ON DUPLICATE KEY UPDATE cost = ?")) {
+                    "INSERT INTO base_price (type, cost) VALUES (?, ?) "))
+            {
                 stmt.setString(1, liftPassType);
                 stmt.setInt(2, liftPassCost);
-                stmt.setInt(3, liftPassCost);
                 stmt.execute();
             }
 
@@ -132,4 +131,21 @@ public class Prices {
         return connection;
     }
 
+    public static String[] createTablesSql() {
+        return new String[] {
+                "DROP TABLE IF EXISTS base_price;",
+                "CREATE TABLE base_price (pass_id INT IDENTITY PRIMARY KEY, type VARCHAR(20) NOT NULL, cost INTEGER NOT NULL);",
+                "DROP TABLE IF EXISTS holidays;",
+                "CREATE TABLE holidays (holiday DATE NOT NULL PRIMARY KEY, description VARCHAR(255) NOT NULL);" };
+        };
+
+    public static String[] insertDataSql() {
+        return new String[] {
+                "INSERT INTO base_price (type, cost) VALUES ('1jour', 35);",
+                "INSERT INTO base_price (type, cost) VALUES ('night', 19);",
+                "INSERT INTO holidays (holiday, description) VALUES ('2019-02-18', 'winter');",
+                "INSERT INTO holidays (holiday, description) VALUES ('2019-02-25', 'winter');",
+                "INSERT INTO holidays (holiday, description) VALUES ('2019-03-04', 'winter');"
+        };
+    }
 }

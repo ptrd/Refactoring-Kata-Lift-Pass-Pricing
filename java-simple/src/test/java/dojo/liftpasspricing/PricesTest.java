@@ -12,6 +12,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import spark.Spark;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -24,6 +25,8 @@ public class PricesTest {
     @BeforeAll
     public static void createPrices() throws SQLException {
         connection = Prices.createApp();
+        loadTestData(connection);
+
     }
 
     @AfterAll
@@ -43,7 +46,7 @@ public class PricesTest {
     public void createNewPrice() throws SQLException {
         createPrice("summer", 15);
         try (PreparedStatement stmt = connection.prepareStatement( //
-                "delete from lift_pass.base_price where lift_pass.base_price.type = 'summer';")){
+                "delete from base_price where base_price.type = 'summer';")){
             int row = stmt.executeUpdate();
             assertEquals(1, row);
         };
@@ -133,4 +136,21 @@ public class PricesTest {
                 extract().jsonPath();
     }
 
+    private static void loadTestData(final Connection connection) throws SQLException {
+        for (String sql : Prices.createTablesSql()) {
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.executeUpdate();
+                System.out.println("Executed: " + sql);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        for (String sql : Prices.insertDataSql()) {
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }
